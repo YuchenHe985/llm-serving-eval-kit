@@ -1,0 +1,4 @@
+{"label": "fake-16-slots", "endpoint": "http://127.0.0.1:9011", "model": "fake",
+ "metadata": {"gpu_model": "simulated", "gpu_count": 1, "gpu_hourly_usd": 2.5, "engine": "fake-server", "parallelism": "16 slots"},
+ "matrix": {"concurrency": [1, 4, 8, 16], "input_words": [32], "max_tokens": [16]},
+ "repetitions": 5, "requests_per_slot": 4, "warmup_requests": 4, "timeout_s": 30}

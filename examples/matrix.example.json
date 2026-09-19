@@ -1,0 +1,26 @@
+{
+  "label": "sglang-4xA100-tp4-qwen2.5-32b",
+  "endpoint": "http://127.0.0.1:30000",
+  "model": "Qwen/Qwen2.5-32B-Instruct",
+  "metadata": {
+    "gpu_model": "A100-SXM4-40GB",
+    "gpu_count": 4,
+    "gpu_hourly_usd": 1.5,
+    "interconnect": "nvlink",
+    "engine": "sglang",
+    "engine_version": "0.5.15.post1",
+    "driver": "580.65.06",
+    "deployment": "bare metal",
+    "parallelism": "TP=4",
+    "precision": "bf16",
+    "nccl_p2p_disabled": "no",
+    "mem_fraction_static": "0.75"
+  },
+  "matrix": { "concurrency": [1, 4, 8, 16, 32], "input_words": [128, 1024], "max_tokens": [128] },
+  "repetitions": 5,
+  "requests_per_slot": 4,
+  "warmup_requests": 8,
+  "prefix_groups": 4,
+  "timeout_s": 120,
+  "seed": 1
+}
