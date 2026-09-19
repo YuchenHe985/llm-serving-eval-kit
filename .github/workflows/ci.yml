@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m compileall -q src
+      - run: PYTHONPATH=src python -m unittest discover -s tests -v
+      - name: generated docs are up to date
+        run: |
+          PYTHONPATH=src python -m llmeval catalog > /tmp/failure-catalog.md
+          diff -u docs/failure-catalog.md /tmp/failure-catalog.md
