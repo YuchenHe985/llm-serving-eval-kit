@@ -1,0 +1,6 @@
+nvidia-container-cli: requirement error: unsatisfied condition: cuda>=13.0, please update your driver to a newer version, or use an earlier cuda container: unknown
+sglang serve: error: unrecognized arguments: --enable-prefix-caching
+RuntimeError: NCCL error: unhandled system error (run with NCCL_DEBUG=INFO for details)
+    ncclCommInitRank failed
+sglang serve: error: unrecognized arguments: --enable-expert-parallel
+[2026-07-27 15:19:44 TP0 EP0] multimem all-gather disabled (CUDA driver error: invalid device ordinal)

@@ -1,0 +1,5 @@
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 GiB. GPU 0 has a total capacity of 39.4 GiB of which 209.00 MiB is free.
+RuntimeError: CUDA error: cudaErrorDevicesUnavailable
+$ nvidia-smi -r -i 2
+Insufficient Permissions
+OSError: [Errno 98] Address already in use
