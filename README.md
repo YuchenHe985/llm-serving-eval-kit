@@ -78,7 +78,7 @@ $ llmeval topo tests/fixtures/topo_rtx4090_pcie.txt
 ### Benchmark with repetitions
 
 `examples/matrix.example.json` is a full matrix for a real SGLang endpoint (any OpenAI-compatible
-streaming server works). Each cell is warmed up, then measured `repetitions` times; results are JSON
+streaming server works). Each repetition is warmed with its own prompt seed before measurement; results are JSON
 with the environment (tool version, host, server info, your setup metadata) stored next to the numbers.
 
 ```
@@ -104,8 +104,8 @@ The ratios below cannot be attributed to any single one of them.
 
 The A100 machine was 1.76x faster on tensor parallelism, but the 4090 run also had NCCL P2P disabled and used a
 different SGLang version, driver and deployment. The tool reports the ratio and says what it cannot be blamed on.
-With one differing factor it says so and attributes the difference to it; with confidence intervals it says when two
-runs are within noise.
+With one differing recorded factor it reports that the result is consistent with that factor without presenting an
+observational comparison as causal; with confidence intervals it says when two runs are within noise.
 
 ## Design notes
 

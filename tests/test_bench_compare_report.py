@@ -130,6 +130,28 @@ class BenchTests(unittest.TestCase):
         finally:
             os.unlink(f.name)
 
+    def test_every_repetition_is_warmed_with_its_measurement_seed(self):
+        calls = []
+        original = bench.run_once
+
+        def fake_run_once(base, model, concurrency, input_words, max_tokens, n_requests,
+                          prefix_groups, timeout, seed, include_usage, offset=0):
+            calls.append((seed, n_requests, offset))
+            return {name: 1.0 for name in bench.METRICS}
+
+        cfg = {"endpoint": "http://unused", "model": "m", "label": "unit", "metadata": {},
+               "matrix": {"concurrency": [2], "input_words": [8], "max_tokens": [4]},
+               "repetitions": 3, "requests_per_slot": 4, "warmup_requests": 2,
+               "prefix_groups": 2, "timeout_s": 10, "seed": 7, "include_usage": True}
+        try:
+            bench.run_once = fake_run_once
+            bench.run_matrix(cfg)
+        finally:
+            bench.run_once = original
+        self.assertEqual(calls, [(7, 2, 10_000), (7, 8, 0),
+                                 (8, 2, 10_000), (8, 8, 0),
+                                 (9, 2, 10_000), (9, 8, 0)])
+
 
 def result(label, meta, p50, p95, ci50=None, tps=None, conc=8):
     s = {"success_rate": {"mean": 1.0, "ci95": None},
@@ -158,14 +180,15 @@ class CompareTests(unittest.TestCase):
         self.assertTrue(c["confounded"])
         self.assertIn("engine_version", names)
 
-    def test_single_factor_is_attributable(self):
+    def test_single_recorded_factor_is_reported_without_causal_claim(self):
         base = {"gpu_model": "X", "engine_version": "1", "nccl_p2p_disabled": "yes"}
         a = result("a", base, 100, 200)
         b = result("b", {**base, "nccl_p2p_disabled": "no"}, 60, 120)
         c = compare.compare(a, b)
         self.assertFalse(c["confounded"])
         self.assertEqual([k for k, _, _ in c["factors"]], ["nccl_p2p_disabled"])
-        self.assertIn("attributed", c["verdict"])
+        self.assertIn("consistent with", c["verdict"])
+        self.assertIn("does not by itself establish causality", c["verdict"])
         self.assertAlmostEqual(next(r for r in c["rows"] if r["metric"] == "latency_p50_ms")["improvement"], 100 / 60)
 
     def test_identical_configuration_and_noise(self):
@@ -242,9 +265,12 @@ class CliTests(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as d:
                 cfg = os.path.join(d, "c.json")
-                json.dump({"endpoint": srv.url, "model": "m", "label": "e2e", "metadata": {"gpu_model": "fake", "gpu_count": 1, "gpu_hourly_usd": 1.0},
-                           "matrix": {"concurrency": [2], "input_words": [8], "max_tokens": [4]},
-                           "repetitions": 3, "requests_per_slot": 2, "warmup_requests": 1, "timeout_s": 10}, open(cfg, "w"))
+                with open(cfg, "w", encoding="utf-8") as f:
+                    json.dump({"endpoint": srv.url, "model": "m", "label": "e2e",
+                               "metadata": {"gpu_model": "fake", "gpu_count": 1, "gpu_hourly_usd": 1.0},
+                               "matrix": {"concurrency": [2], "input_words": [8], "max_tokens": [4]},
+                               "repetitions": 3, "requests_per_slot": 2,
+                               "warmup_requests": 1, "timeout_s": 10}, f)
                 out = os.path.join(d, "r.json")
                 self.assertEqual(self.run_cli("bench", "--config", cfg, "--out", out)[0], 0)
                 code, md = self.run_cli("report", out, "--slo-p95-ms", "5000")

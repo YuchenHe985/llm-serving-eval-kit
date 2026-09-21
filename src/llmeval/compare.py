@@ -58,10 +58,11 @@ def compare(a: dict, b: dict, metrics: Optional[list[str]] = None) -> dict:
             rows.append({"cell": key, "metric": m, "a": sa["mean"], "b": sb["mean"], "improvement": imp,
                          "noise": overlap})
     if not factors:
-        verdict = "Same recorded configuration: differences are run-to-run noise or unrecorded variables."
+        verdict = "Same recorded configuration: observed differences may be run-to-run noise or unrecorded variables."
     elif len(factors) == 1:
         k, av, bv = factors[0]
-        verdict = f"One factor differs ({k}: {av} -> {bv}); the difference can be attributed to it, subject to the intervals."
+        verdict = (f"One recorded factor differs ({k}: {av} -> {bv}); the result is consistent with that factor, "
+                   "but this observational comparison does not by itself establish causality.")
     else:
         names = ", ".join(k for k, _, _ in factors)
         verdict = (f"CONFOUNDED: {len(factors)} setup factors differ ({names}). "

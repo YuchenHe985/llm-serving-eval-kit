@@ -10,7 +10,20 @@ from . import bench, compare as cmp, doctor, report, sizing, topo
 
 
 def _read(path: str) -> str:
-    return sys.stdin.read() if path == "-" else open(path, encoding="utf-8", errors="replace").read()
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8", errors="replace") as f:
+        return f.read()
+
+
+def _read_json(path: str):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _write_json(path: str, value) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(value, f, indent=2)
 
 
 def cmd_size(a) -> int:
@@ -18,7 +31,7 @@ def cmd_size(a) -> int:
         if a.params_b is None:
             print("--params-b is required with --hf-config", file=sys.stderr)
             return 2
-        spec = sizing.spec_from_hf_config(json.load(open(a.hf_config)), a.params_b, os.path.basename(os.path.dirname(a.hf_config)) or "custom")
+        spec = sizing.spec_from_hf_config(_read_json(a.hf_config), a.params_b, os.path.basename(os.path.dirname(a.hf_config)) or "custom")
     else:
         if a.model not in sizing.PRESETS:
             print(f"unknown model {a.model!r}; presets: {', '.join(sizing.PRESETS)}", file=sys.stderr)
@@ -76,8 +89,7 @@ def cmd_bench(a) -> int:
     cfg = bench.load_config(a.config)
     res = bench.run_matrix(cfg, progress=lambda m: print(m, file=sys.stderr))
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    with open(a.out, "w") as f:
-        json.dump(res, f, indent=2)
+    _write_json(a.out, res)
     print(f"wrote {a.out}")
     return 0
 
@@ -86,23 +98,23 @@ def cmd_import(a) -> int:
     os.makedirs(a.out_dir, exist_ok=True)
     for r in cmp.import_runs_csv(a.csv):
         path = os.path.join(a.out_dir, f"{r['label']}.json")
-        with open(path, "w") as f:
-            json.dump(r, f, indent=2)
+        _write_json(path, r)
         print(f"wrote {path}")
     return 0
 
 
 def cmd_compare(a) -> int:
-    ra, rb = (json.load(open(p)) for p in (a.a, a.b))
+    ra, rb = (_read_json(p) for p in (a.a, a.b))
     print(cmp.render(cmp.compare(ra, rb)))
     return 0
 
 
 def cmd_report(a) -> int:
-    results = [json.load(open(p)) for p in a.results]
+    results = [_read_json(p) for p in a.results]
     md = report.render_markdown(results, a.slo_p95_ms, a.gpu_count, a.gpu_hourly_usd)
     if a.out:
-        open(a.out, "w").write(md)
+        with open(a.out, "w", encoding="utf-8") as f:
+            f.write(md)
         print(f"wrote {a.out}")
     else:
         print(md)
