@@ -1,6 +1,6 @@
 # llm-serving-eval-kit
 
-[![ci](https://github.com/YuchenHe985/llm-serving-eval-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/YuchenHe985/llm-serving-eval-kit/actions/workflows/ci.yml)
+[![ci](https://github.com/YuchenHe985/llm-serving-eval-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/YuchenHe985/llm-serving-eval-kit/actions/workflows/ci.yml) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white) [![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f.svg)](LICENSE)
 
 Sizing, failure diagnosis and reproducible benchmarking for LLM inference deployments. It is the
 tooling I wanted while evaluating SGLang on 4x RTX 4090 (PCIe) and 4x A100 (NVLink) machines: work
@@ -8,7 +8,7 @@ out how many GPUs a model needs, turn a wall of startup errors into causes and f
 repetitions and confidence intervals instead of one run, and compare two setups without pretending a
 ratio is caused by the one factor you care about.
 
-Python 3.10+, standard library only (matplotlib is optional, for plots). 38 unit and end-to-end tests run in about 6 seconds.
+Python 3.10+, standard library only (matplotlib is optional, for plots). 39 unit and end-to-end tests run in about 6 seconds.
 
 ```
 llmeval size     how many GPUs, at what tensor parallelism, does this model need?
