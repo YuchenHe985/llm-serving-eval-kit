@@ -203,11 +203,18 @@ def run_matrix(cfg: dict, progress=lambda msg: None) -> dict:
         for iw in cfg["matrix"]["input_words"]:
             for mt in cfg["matrix"]["max_tokens"]:
                 n = max(conc * cfg["requests_per_slot"], 8)
-                progress(f"cell concurrency={conc} input_words={iw} max_tokens={mt}: warmup + {cfg['repetitions']} x {n} requests")
-                run_once(base, model, conc, iw, mt, cfg["warmup_requests"], cfg["prefix_groups"],
-                         cfg["timeout_s"], cfg["seed"], cfg["include_usage"], offset=10_000)
-                reps = [run_once(base, model, conc, iw, mt, n, cfg["prefix_groups"], cfg["timeout_s"],
-                                 cfg["seed"] + r, cfg["include_usage"]) for r in range(cfg["repetitions"])]
+                progress(f"cell concurrency={conc} input_words={iw} max_tokens={mt}: "
+                         f"{cfg['repetitions']} x (warmup + {n} measured requests)")
+                reps = []
+                for r in range(cfg["repetitions"]):
+                    # Prompt generation is seed-dependent. Warm each repetition with the
+                    # same seed it will measure; otherwise repetitions after the first one
+                    # accidentally benchmark cold prefixes while being reported together.
+                    rep_seed = cfg["seed"] + r
+                    run_once(base, model, conc, iw, mt, cfg["warmup_requests"], cfg["prefix_groups"],
+                             cfg["timeout_s"], rep_seed, cfg["include_usage"], offset=10_000)
+                    reps.append(run_once(base, model, conc, iw, mt, n, cfg["prefix_groups"], cfg["timeout_s"],
+                                         rep_seed, cfg["include_usage"]))
                 cells.append({"concurrency": conc, "input_words": iw, "max_tokens": mt,
                               "repetitions": reps, "summary": summarize_cell(reps)})
     return {

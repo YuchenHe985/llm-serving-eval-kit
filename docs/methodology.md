@@ -30,8 +30,9 @@ resident, so total parameters are used for weights.
 
 ## Benchmark design
 
-- **Cell** = concurrency x input words x max output tokens. Each cell is warmed up once, then measured
-  `repetitions` times with different seeds, each repetition sending `max(concurrency x requests_per_slot, 8)` requests.
+- **Cell** = concurrency x input words x max output tokens. Each repetition uses a different seed and is warmed with
+  that same seed before sending `max(concurrency x requests_per_slot, 8)` measured requests. This prevents the
+  confidence interval from mixing a warm first repetition with cold later prefix groups.
 - **Closed loop.** `concurrency` worker threads keep that many requests in flight. Throughput is measured, not offered.
 - **Metrics per repetition:** success rate; latency P50/P95/P99 and TTFT P50/P95 over successful requests;
   mean time per output token (first-to-last token gap over tokens minus one); output tokens/s = tokens of successful
@@ -53,8 +54,8 @@ resident, so total parameters are used for weights.
 
 | Differing factors | Verdict |
 | --- | --- |
-| none | Same recorded configuration; differences are noise or an unrecorded variable. |
-| exactly one | The difference can be attributed to that factor, subject to the intervals. |
+| none | Same recorded configuration; differences may be noise or an unrecorded variable. |
+| exactly one | The result is consistent with that recorded factor, but an observational comparison does not establish causality. |
 | two or more | CONFOUNDED: the ratio cannot be attributed to any one of them. |
 
 For each aligned cell the tool prints "B better by" (A/B for latency-like metrics, B/A for throughput and success rate) and,
